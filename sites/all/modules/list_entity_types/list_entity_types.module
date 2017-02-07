@@ -1,0 +1,111 @@
+<?php
+/**
+ * @file
+ * List Entity Types module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function list_entity_types_menu() {
+  $items = array();
+
+  $items['admin/config/content/list_entity_types'] = array(
+    'title' => 'List Entity Types',
+    'description' => 'Configuration for List Entity Types',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('list_entity_types_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements list_entity_types_form().
+ */
+function list_entity_types_form($form, &$form_state) {
+    $entity_info_arr = array();
+    $entity_types_arr = array();
+    $entity_types = array();
+    $def_entity_types_arr = array();
+    $default_entity_types = array();
+    $node_bundles = array();
+    
+    // static array of core entity types
+    $core_entity_types = array('comment', 'node', 'file', 'taxonomy_term', 'taxonomy_vocabulary', 'user');
+    
+    $entity_info_arr = entity_get_info(NULL);
+    $entity_info = array_keys($entity_info_arr);
+    $entity_types_arr = array_diff($entity_info, $core_entity_types);
+
+    // the options to display in our checkboxes
+    foreach ($entity_types_arr as $entity_type) {
+        $entity_types[$entity_type] = isset($entity_info_arr[$entity_type]['label'])?$entity_info_arr[$entity_type]['label']:ucwords(str_replace("_", " ", $entity_type));
+    }
+    
+    // default entity types
+    $def_entity_types_arr = variable_get('list_entity_types');
+    if (!empty($def_entity_types_arr)) {
+        foreach ($def_entity_types_arr as $default_entity_type => $def_entity_types) {
+            foreach ($def_entity_types as $key => $value) {
+                $default_entity_types[$default_entity_type][$key] = ($value == 1)?$key:$value;
+            }
+        }
+    }
+    
+    // get all bundles for node entity types
+    $node_bundles = node_type_get_types();
+    
+    // form field creation
+    $form['bundle_entity_types'] = array(
+      '#type' => 'vertical_tabs',
+    );
+    foreach ($node_bundles as $content_type => $bundle) {
+        $form['bundle_' . $content_type] = array(
+            '#type' => 'fieldset',
+            '#title' => t('@data', array('@data' => $bundle->name)),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            '#group' => 'bundle_entity_types',
+            '#description' => t('Select entity types for @data.', array('@data' => $bundle->name)),
+        );
+        
+        $form['bundle_' . $content_type][$content_type] = array(
+            '#title' => 'Entity Types',
+            '#type' => 'checkboxes',
+            '#description' => 'Select the entity type.',
+            '#options' => $entity_types,
+            '#default_value' => isset($default_entity_types[$content_type])?$default_entity_types[$content_type]:array(),
+        );
+    }
+    
+    $form['submit_button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+    );
+    return $form;
+}
+
+/**
+ * Handle post-validation form submission.
+ */
+function list_entity_types_form_submit($form, &$form_state) {
+    global $user;
+    $form_array = array();
+    $form_data = array();
+    $node_bundles = array();
+    $node_bundle_keys = array();
+    
+    $node_bundles = node_type_get_types();
+    $node_bundle_keys = array_keys($node_bundles);
+    $form_array = $form_state['values'];
+    foreach ($node_bundle_keys as $content_type) {
+        foreach ($form_array[$content_type] as $key => $entity_type) {
+            $form_data[$content_type][$key] = is_string($entity_type)?1:0;
+        }
+    }
+    variable_set('list_entity_types', $form_data);
+    drupal_set_message(t('Your configuration has been saved.'));
+}

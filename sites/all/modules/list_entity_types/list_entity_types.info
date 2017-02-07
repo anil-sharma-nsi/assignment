@@ -1,0 +1,4 @@
+name = List Entity Types
+description = List all entity types.
+core = 7.x
+configure = admin/config/content/list_entity_types

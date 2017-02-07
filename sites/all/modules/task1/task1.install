@@ -1,0 +1,71 @@
+<?php
+function task1_schema() {
+    $schema['table1'] = array(
+        'description' => 'The test table for task1.',
+        'fields' => array(
+            'testid' => array(
+                'description' => 'The primary identifier for a table1.',
+                'type' => 'serial',
+                'not null' => TRUE,
+            ),
+            'section' => array(
+                'description' => 'The section for a test.',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+            ),
+        ),
+        'primary key' => array('testid'),
+        'unique keys' => array('testid' => array('testid', 'section')),
+    );
+    return $schema;
+}
+
+/**
+ * Add section field to {table1} table.
+ */
+function task1_update_7102() {
+    $spec = array(
+        'type' => 'serial',
+        'not null' => TRUE,
+    );
+    db_change_field('table1', 'testid', 'testid', $spec, array('description' => 'The primary identifier for a test.'));
+}
+
+/**
+ * Update testid field to {table1} table.
+ */
+function task1_update_7103() {
+    $spec = array(
+        'description' => 'The primary identifier for a test.',
+    );
+    db_change_field('table1', 'testid', 'testid', $spec);
+}
+
+/**
+ * Update testid field to {table1} table.
+ */
+function task1_update_7104() {
+    $spec = array(
+        'description' => 'The primary identifier for a table1.',
+        'type' => 'serial',
+        'not null' => TRUE,
+    );
+    db_change_field('table1', 'testid', 'testid', $spec);
+}
+
+/**
+ * Add unique key testid field to {table1} table.
+ */
+function task1_update_7105() {
+    $fields = array('testid', 'section');
+    db_add_unique_key('table1', 'testid', $fields);
+}
+
+/**
+ * Drop field name in {table1} table.
+ */
+function task1_update_7107() {
+    $field = "name";
+    db_drop_field('table1', $field);
+}

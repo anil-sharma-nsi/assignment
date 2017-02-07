@@ -1,0 +1,4 @@
+name = List Bundles
+description = List all Node bundles.
+core = 7.x
+configure = admin/config/content/list_bundles

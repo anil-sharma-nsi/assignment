@@ -1,0 +1,75 @@
+<?php
+/**
+ * @file
+ * List Entity Types module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function list_bundles_menu() {
+  $items = array();
+
+  $items['admin/config/content/list_bundles'] = array(
+    'title' => 'List Bundles',
+    'description' => 'Configuration for List Bundles',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('list_bundles_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements list_bundles_form().
+ */
+function list_bundles_form($form, &$form_state) {
+    $bundles_arr = array();
+    $bundles = array();
+    $def_bundles_arr = array();
+    $def_bundles = array();
+    
+    // get all bundles for node entity types
+    $bundles_arr = node_type_get_types();
+    
+    // the options to display in our checkboxes
+    foreach ($bundles_arr as $bundle_name => $bundle) {
+        $bundles[$bundle_name] = isset($bundle->name)?$bundle->name:ucwords(str_replace("_", " ", $bundle_name));
+    }
+    
+    // default node bundles
+    $def_bundles_arr = variable_get('list_bundles');
+    foreach ($def_bundles_arr as $key => $value) {
+        $def_bundles[$key] = ($value == 1)?$key:$value;
+    }
+    
+    // form field creation
+    $form['node_bundles'] = array(
+        '#title' => 'Node Bundles',
+        '#type' => 'checkboxes',
+        '#description' => 'Select the bundles for Field Collection.',
+        '#options' => $bundles,
+        '#default_value' => isset($def_bundles)?$def_bundles:array(),
+    );
+    
+    $form['submit_button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+    );
+    return $form;
+}
+
+/**
+ * Handle post-validation form submission.
+ */
+function list_bundles_form_submit($form, &$form_state) {
+    $form_data = array();
+    
+    foreach ($form_state['values']['node_bundles'] as $key => $bundle_name) {
+        $form_data[$key] = is_string($bundle_name)?1:0;
+    }
+    variable_set('list_bundles', $form_data);
+    drupal_set_message(t('Your configuration has been saved.'));
+}

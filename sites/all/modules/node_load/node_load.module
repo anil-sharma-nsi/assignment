@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Node Load module.
+ */
+/**
+ * Implements hook_block_info().
+ */
+
+function node_load_node_load($node) {
+    $key = key($node);
+    $type = $node[$key]->type;
+    $def_bundles_arr = variable_get('list_bundles');
+    $new_node_array = array();
+    if (isset($def_bundles_arr[$type]) && $def_bundles_arr[$type] == 1) {
+        $field_info = array();
+        $field_info = field_info_field_map();
+        foreach ($field_info as $f_col => $field) {
+            if ($field['type'] == "field_collection" && isset($node[$key]->$f_col)) {
+                $node_array = $node[$key]->$f_col;
+                //print_r($node_array);
+                $new_node_array = get_bundle_field_collection($node_array, $node_array);
+                //print_r($new_node_array);
+                $node[$key]->$f_col = $node_array;
+            }
+        }
+    }
+    //print_r($node);
+    //exit();
+}
+
+function get_bundle_field_collection($field_data, &$node_array) {
+    if (isset($field_data['und'][0]['revision_id'])) {
+        $collections_rs = field_collection_item_load($field_data['und'][0]['value']);
+        foreach ($collections_rs as $field_name => $field_arr) {
+            if (strpos ($field_name, 'field') !== FALSE) {
+                if (isset($field_arr['und']) && is_array($field_arr['und']) && isset($field_arr['und'][0]['value'])) {
+                    //var_dump(key($field_data));
+                    $node_array['und'][0]['field_items'][$field_name] = $field_arr;
+                    //echo $field_name." - ";
+                    //print_r($field_arr);
+                    get_bundle_field_collection($field_arr, $node_array);
+                }
+            }
+        }
+    }
+    return $node_array;
+}
+

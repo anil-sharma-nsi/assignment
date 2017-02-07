@@ -1,0 +1,4 @@
+name = Copy Article
+description = It will copy any new Article content type created to a new Copy Article content type.
+core = 7.x
+dependencies[] = node

@@ -1,0 +1,3 @@
+name = Task1
+description = It will create custom table in database.
+core = 7.x
